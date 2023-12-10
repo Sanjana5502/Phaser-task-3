@@ -31,22 +31,3 @@
   border-radius: 5px;
   margin-top: 10px;
 }
-/* App.css */
-
-.split-screen {
-  display: flex;
-}
-
-.view {
-  flex: 1;
-  padding: 20px;
-}
-
-.admin-view {
-  background-color: #f0f0f0;
-}
-
-.user-view {
-  background-color: #ffffff;
-  border-left: 1px solid #ccc;
-}

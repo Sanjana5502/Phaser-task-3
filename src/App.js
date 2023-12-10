@@ -15,10 +15,11 @@ const Button = ({ x, y, label, onClick, disabled }) => (
 );
 
 const App = () => {
-  const phaserRef = useRef(null);
-  const ballRef = useRef(null);
-  const gameRef = useRef(null);
-  const socketRef = useRef(null);
+  const phaser = useRef(null);
+  const ball = useRef(null);
+  const game = useRef(null);
+  const socket = useRef(null);
+  
   const [ballPosition] = useState({ x: 0, y: 0 });
   const [isAdmin, setIsAdmin] = useState(false);
   const [clickedButtons, setClickedButtons] = useState([]);
@@ -33,16 +34,15 @@ const App = () => {
   };
 
   useEffect(() => {
-    socketRef.current = io("http://localhost:4000");
-    socketRef.current.on("connect", () => {
+    socket.current = io("http://localhost:3001");
+    socket.current.on("connect", () => {
       console.log("Connected to server");
     });
-    socketRef.current.on("admin", () => {
+    socket.current.on("admin", () => {
       console.log("Received admin event");
       setIsAdmin(true);
     });
-
-    socketRef.current.on("viewer", () => {
+    socket.current.on("user", () => {
       console.log("Received user event");
       setIsAdmin(false);
     });
@@ -50,7 +50,7 @@ const App = () => {
       type: Phaser.AUTO,
       width: 700,
       height: 500,
-      parent: phaserRef.current,
+      parent: phaser.current,
       physics: {
         default: "arcade",
         arcade: {
@@ -64,28 +64,21 @@ const App = () => {
         update: update,
       },
     };
-
-    gameRef.current = new Phaser.Game(config);
-
+    game.current = new Phaser.Game(config);
     function preload() {
       this.load.image("ball", "./ball.png");
       this.cameras.main.setBackgroundColor('#add8e6');
     }
-
-
     function create() {
-      socketRef.current.emit(isAdmin ? "admin" : "viewer");
-
-      ballRef.current = this.physics.add.sprite(350, 300, "ball");
-      ballRef.current.setCollideWorldBounds(true);
-      ballRef.current.setBounce(1);
-      ballRef.current.setInteractive();
-      ballRef.current.setScale(0.1);
-
+      socket.current.emit(isAdmin ? "admin" : "user");
+      ball.current = this.physics.add.sprite(350, 300, "ball");
+      ball.current.setCollideWorldBounds(true);
+      ball.current.setBounce(1);
+      ball.current.setInteractive();
+      ball.current.setScale(0.1);
       this.physics.world.setBoundsCollision(true, true, true, true);
-
       this.physics.add.collider(
-        ballRef.current,
+        ball.current,
         null,
         handleCollision,
         null,
@@ -96,44 +89,44 @@ const App = () => {
     function handleCollision() { }
 
     function update() {
-      if (ballRef.current) {
-        socketRef.current.emit("ballPosition", {
-          x: ballRef.current.x,
-          y: ballRef.current.y,
+      if (ball.current) {
+        socket.current.emit("ballPosition", {
+          x: ball.current.x,
+          y: ball.current.y,
         });
       }
     }
     return () => {
-      gameRef.current.destroy(true);
-      socketRef.current.off("ballMoved");
-      socketRef.current.disconnect();
+      game.current.destroy(true);
+      socket.current.off("ballMoved");
+      socket.current.disconnect();
     };
   }, [ballPosition, isAdmin]);
   useEffect(() => {
-    socketRef.current.on("ballMoved", ({ x, y }) => {
-      if (!isAdmin && ballRef.current) {
+    socket.current.on("ballMoved", ({ x, y }) => {
+      if (!isAdmin && ball.current) {
         const angle = Phaser.Math.Angle.Between(
-          ballRef.current.x,
-          ballRef.current.y,
+          ball.current.x,
+          ball.current.y,
           x,
           y
         );
 
-        ballRef.current.setVelocity(
+        ball.current.setVelocity(
           Math.cos(angle) * 700,
           Math.sin(angle) * 700
         );
 
         const distance = Phaser.Math.Distance.Between(
-          ballRef.current.x,
-          ballRef.current.y,
+          ball.current.x,
+          ball.current.y,
           x,
           y
         );
         const duration = (distance / 700) * 1000;
 
-        gameRef.current.scene.scenes[0].tweens.add({
-          targets: ballRef.current,
+        game.current.scene.scenes[0].tweens.add({
+          targets: ball.current,
           x: x,
           y: y,
           duration: duration,
@@ -143,33 +136,33 @@ const App = () => {
         });
       }
     });
-    socketRef.current.on("adminButtonClicked", (buttonName) => {
+    socket.current.on("adminButtonClicked", (buttonName) => {
       setLastClickedButton(buttonName);
       setClickedButtons([...clickedButtons, buttonName]);
     });
   }, [isAdmin, clickedButtons]);
   const handleButtonClick = (x, y, buttonName) => {
     if (isAdmin) {
-      socketRef.current.emit("ballMoved", { x, y });
-      socketRef.current.emit("adminButtonClicked", buttonName);
+      socket.current.emit("ballMoved", { x, y });
+      socket.current.emit("adminButtonClicked", buttonName);
       setLastClickedButton(buttonName);
 
     } else {
-      socketRef.current.emit("viewerButtonClicked", { x, y });
-      //      socketRef.current.emit("viewerButtonClicked", buttonName);
+      socket.current.emit("userButtonClicked", { x, y });
+      //      socket.current.emit("userButtonClicked", buttonName);
       setButtonDisabled(true);
     }
 
-    if (ballRef.current && isAdmin) {
+    if (ball.current && isAdmin) {
       const angle = Phaser.Math.Angle.Between(
-        ballRef.current.x,
-        ballRef.current.y,
+        ball.current.x,
+        ball.current.y,
         x,
         y
       );
       const speed = 800;
-      ballRef.current.setVelocityX(Math.cos(angle) * speed);
-      ballRef.current.setVelocityY(Math.sin(angle) * speed);
+      ball.current.setVelocityX(Math.cos(angle) * speed);
+      ball.current.setVelocityY(Math.sin(angle) * speed);
     }
     setClickedButtons([...clickedButtons, buttonName]);
   };
@@ -207,8 +200,7 @@ const App = () => {
           <Button x={400} y={0} label="Button 8" onClick={handleButtonClick} disabled={buttonDisabled} />
 
           <div className="w-9/12 h-9/12">
-            {/* Canvas container */}
-            <div ref={phaserRef} />
+            <div ref={phaser} />
           </div>
         </div>
       </div>
