@@ -1,38 +1,52 @@
-.App {
-  text-align: center;
+
+.button {
+  position: absolute;
+  background-color: #3498db;
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.button:hover {
+  background-color: #2980b9;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.button.disabled {
+  background-color: #7f8c8d;
+  cursor: not-allowed;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+#right-panel {
+  background-color: #f0f0f0;
+  padding: 15px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+.admin-info {
+  background-color: #ecf0f1;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+/* App.css */
+
+.split-screen {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.view {
+  flex: 1;
+  padding: 20px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.admin-view {
+  background-color: #f0f0f0;
+}
+
+.user-view {
+  background-color: #ffffff;
+  border-left: 1px solid #ccc;
 }
